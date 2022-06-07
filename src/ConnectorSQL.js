@@ -1,9 +1,13 @@
 import mysql from 'mysql2';
-import sqlConfig from '../config/sqlConfig.js';
+import sqlConfig from '../config/sqlConnect.js';
+import paramsTable from '../config/paramsTable.js';
 
 class ConnectorSQL {
     constructor() {
-        this.connection = mysql.createConnection(sqlConfig);
+        this.connection = mysql.createConnection(sqlConfig[process.env.NODE_ENV]);
+        this.num = paramsTable.fields.num;
+        this.date = paramsTable.fields.date;
+        this.state = paramsTable.fields.state;
     }
 
     insertInvoice() {
@@ -16,8 +20,8 @@ class ConnectorSQL {
 
     querySelectWithFilter(filter) {
         try {
-            const strFilter = filter.map(({numInvoice, dateInvoice}) => (`numInvoice="${numInvoice}" AND dateInvoice="${dateInvoice}"`)).join(' or ');
-            const selectQuery = `SELECT numInvoice, dateInvoice FROM Invoice WHERE ${strFilter};`;
+            const strFilter = filter.map(({numInvoice, dateInvoice}) => (`${this.num}="${numInvoice}" AND ${this.date}="${dateInvoice}"`)).join(' or ');
+            const selectQuery = `SELECT ${this.num}, ${this.date} FROM ${paramsTable.nameTable} WHERE ${strFilter};`;
             return selectQuery;
         } catch (err) {
             throw new Error;
@@ -31,7 +35,7 @@ class ConnectorSQL {
     }
     updateInvoices(invoices, sumResult) {
         if (!invoices.length) return;
-        const queries = invoices.map((invoice) => (` UPDATE Invoice SET state='${invoice.state}' WHERE numInvoice='${invoice.numInvoice}' AND dateInvoice='${invoice.dateInvoice}'`));
+        const queries = invoices.map((invoice) => (` UPDATE ${paramsTable.nameTable} SET ${this.state}='${invoice.state}' WHERE ${this.num}='${invoice.numInvoice}' AND ${this.date}='${invoice.dateInvoice}'`));
         queries.forEach((query) => (
             this.connection.query(query, sumResult)
         ));
@@ -40,7 +44,7 @@ class ConnectorSQL {
 
     appendInvoices(invoices, sumResult) {
         if (!invoices.length) return;
-        const queryInsert = `INSERT INTO Invoice (numInvoice, dateInvoice, state) VALUES `;
+        const queryInsert = `INSERT INTO ${paramsTable.nameTable} (${this.num}, ${this.date}, ${this.state}) VALUES `;
         const queryData = invoices.map((invoice) => (`
         ("${invoice.numInvoice}", "${invoice.dateInvoice}", "${invoice.state}")`)).join(',');
         const totalQuery = queryInsert.concat(queryData, ';');

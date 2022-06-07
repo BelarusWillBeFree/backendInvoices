@@ -16,11 +16,12 @@ class ServerInvoice {
         this.app.post("/setInvoice", this.setInvoice);
         this.app.get("/getInvoice", this.getInvoice);
         this.app.get("/", this.default);
+        //console.log(process.env.NODE_ENV);
     }
 
     startServer() {
         this.app.listen(this.port, () => {
-            console.log("Server is Running")
+            console.log(`Server ${process.env.NODE_ENV} is Running`)
         });
     }
 
