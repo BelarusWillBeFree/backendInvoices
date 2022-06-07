@@ -20,9 +20,13 @@ class ServerInvoice {
     }
 
     startServer() {
-        this.app.listen(this.port, () => {
+        if (process.env.NODE_ENV === 'Development') {
+            this.app.listen( this.port, () => {
             console.log(`Server ${process.env.NODE_ENV} is Running`)
-        });
+            });
+        } else {
+            this.app.listen();
+        }
     }
 
     sendResponse(response, bodyResp) {
